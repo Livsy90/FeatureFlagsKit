@@ -110,12 +110,12 @@ Use `FlagConfiguration` with the result-builder DSL:
 
 ```swift
 let businessConfiguration = FlagConfiguration<AppFeature> {
-    enable(AppFeature.newOnboarding)
-    disable(AppFeature.redesignedCheckout)
+    enable(.newOnboarding)
+    disable(.redesignedCheckout)
 }
 
 let testingConfiguration = FlagConfiguration<AppFeature> {
-    enable(AppFeature.redesignedCheckout)
+    enable(.redesignedCheckout)
 }
 ```
 
@@ -183,8 +183,8 @@ An in-memory source for static configuration, tests, and ad hoc overrides.
 ```swift
 let source = DictionaryFeatureFlagSource(
     states: [
-        enable(AppFeature.newOnboarding),
-        disable(AppFeature.redesignedCheckout)
+        enable(.newOnboarding),
+        disable(.redesignedCheckout)
     ],
     priority: .business
 )
@@ -217,12 +217,12 @@ Overrides persist across launches and participate in normal priority resolution.
 ```swift
 func runUsageExample() {
     let businessConfiguration = FlagConfiguration<AppFeature> {
-        enable(AppFeature.newOnboarding)
-        disable(AppFeature.redesignedCheckout)
+        enable(.newOnboarding)
+        disable(.redesignedCheckout)
     }
 
     let testingConfiguration = FlagConfiguration<AppFeature> {
-        enable(AppFeature.redesignedCheckout)
+        enable(.redesignedCheckout)
     }
 
     let localOverrides = PersistentOverrideFeatureFlagSource(
