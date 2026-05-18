@@ -53,10 +53,10 @@ private let featureToggleExampleFlags: FeatureFlags = {
         isSimulator: true,
         localOverridesSource: featureToggleOverrideSource,
         businessConfiguration: FlagConfiguration<FeatureToggleExampleFlag> {
-            disable(FeatureToggleExampleFlag.debugLogging)
-            disable(FeatureToggleExampleFlag.verboseNetworking)
-            enable(FeatureToggleExampleFlag.newOnboarding)
-            disable(FeatureToggleExampleFlag.redesignedCheckout)
+            disable(.debugLogging)
+            disable(.verboseNetworking)
+            enable(.newOnboarding)
+            disable(.redesignedCheckout)
         },
         testingConfiguration: .empty,
         simulatorConfiguration: .empty,
