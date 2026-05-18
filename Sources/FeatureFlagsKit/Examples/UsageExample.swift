@@ -25,12 +25,12 @@ enum AppFeature: String, Feature {
 }
 
 let businessConfiguration = FlagConfiguration<AppFeature> {
-    enable(AppFeature.newOnboarding)
-    disable(AppFeature.redesignedCheckout)
+    enable(.newOnboarding)
+    disable(.redesignedCheckout)
 }
 
 let testingConfiguration = FlagConfiguration<AppFeature> {
-    enable(AppFeature.redesignedCheckout)
+    enable(.redesignedCheckout)
 }
 
 let localOverrides = PersistentOverrideFeatureFlagSource(
