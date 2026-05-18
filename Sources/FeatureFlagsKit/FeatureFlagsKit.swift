@@ -152,8 +152,19 @@ public final class FeatureFlags: FeatureFlagReadable, @unchecked Sendable {
         return snapshot
     }
 
-    private static func sortedSources(_ sources: [any FeatureFlagSource]) -> [any FeatureFlagSource] {
-        sources.sorted(by: areSourcesOrdered)
+    private static func sortedSources(
+        _ sources: [any FeatureFlagSource]
+    ) -> [any FeatureFlagSource] {
+        sources
+            .enumerated()
+            .sorted { lhs, rhs in
+                if lhs.element.priority == rhs.element.priority {
+                    return lhs.offset < rhs.offset
+                }
+                
+                return lhs.element.priority > rhs.element.priority
+            }
+            .map(\.element)
     }
 
     private static func areSourcesOrdered(_ lhs: any FeatureFlagSource, _ rhs: any FeatureFlagSource) -> Bool {
@@ -292,36 +303,52 @@ public final class PersistentOverrideFeatureFlagSource: FeatureFlagSource, @unch
 
 /// Result builder used to declare feature configurations in a compact DSL.
 @resultBuilder
-public enum FeatureFlagBuilder {
-    public static func buildBlock<FeatureType: Feature>(_ components: [FeatureState<FeatureType>]...) -> [FeatureState<FeatureType>] {
+public enum FeatureFlagBuilder<FeatureType: Feature> {
+    public static func buildBlock(
+        _ components: [FeatureState<FeatureType>]...
+    ) -> [FeatureState<FeatureType>] {
         components.flatMap { $0 }
     }
 
-    public static func buildExpression<FeatureType: Feature>(_ expression: FeatureState<FeatureType>) -> [FeatureState<FeatureType>] {
+    public static func buildExpression(
+        _ expression: FeatureState<FeatureType>
+    ) -> [FeatureState<FeatureType>] {
         [expression]
     }
 
-    public static func buildExpression<FeatureType: Feature>(_ expression: [FeatureState<FeatureType>]) -> [FeatureState<FeatureType>] {
+    public static func buildExpression(
+        _ expression: [FeatureState<FeatureType>]
+    ) -> [FeatureState<FeatureType>] {
         expression
     }
 
-    public static func buildOptional<FeatureType: Feature>(_ component: [FeatureState<FeatureType>]?) -> [FeatureState<FeatureType>] {
+    public static func buildOptional(
+        _ component: [FeatureState<FeatureType>]?
+    ) -> [FeatureState<FeatureType>] {
         component ?? []
     }
 
-    public static func buildEither<FeatureType: Feature>(first component: [FeatureState<FeatureType>]) -> [FeatureState<FeatureType>] {
+    public static func buildEither(
+        first component: [FeatureState<FeatureType>]
+    ) -> [FeatureState<FeatureType>] {
         component
     }
 
-    public static func buildEither<FeatureType: Feature>(second component: [FeatureState<FeatureType>]) -> [FeatureState<FeatureType>] {
+    public static func buildEither(
+        second component: [FeatureState<FeatureType>]
+    ) -> [FeatureState<FeatureType>] {
         component
     }
 
-    public static func buildArray<FeatureType: Feature>(_ components: [[FeatureState<FeatureType>]]) -> [FeatureState<FeatureType>] {
+    public static func buildArray(
+        _ components: [[FeatureState<FeatureType>]]
+    ) -> [FeatureState<FeatureType>] {
         components.flatMap { $0 }
     }
 
-    public static func buildLimitedAvailability<FeatureType: Feature>(_ component: [FeatureState<FeatureType>]) -> [FeatureState<FeatureType>] {
+    public static func buildLimitedAvailability(
+        _ component: [FeatureState<FeatureType>]
+    ) -> [FeatureState<FeatureType>] {
         component
     }
 }
@@ -340,7 +367,7 @@ public struct FlagConfiguration<FeatureType: Feature>: Sendable {
     }
 
     /// Creates a configuration using the feature flag result builder DSL.
-    public init(@FeatureFlagBuilder _ builder: () -> [FeatureState<FeatureType>]) {
+    public init(@FeatureFlagBuilder<FeatureType> _ builder: () -> [FeatureState<FeatureType>]) {
         self.states = builder()
     }
 
