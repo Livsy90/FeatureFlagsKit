@@ -1,41 +1,96 @@
-#if canImport(SwiftUI)
 import SwiftUI
 
-public extension EnvironmentValues {
-    /// The feature flag resolver available to the current SwiftUI view hierarchy.
-    ///
-    /// When no explicit value is injected, SwiftUI uses an empty `FeatureFlags`
-    /// instance, so all lookups fall back to each feature's `defaultValue`.
-    @Entry var featureFlags: FeatureFlags = FeatureFlags()
+enum SwiftUIAppFeature: String, Feature {
+    case newOnboarding
+    case redesignedCheckout
+    case debugBanner
+
+    var description: String {
+        switch self {
+        case .newOnboarding:
+            "Enables the new onboarding flow"
+        case .redesignedCheckout:
+            "Enables the redesigned checkout flow"
+        case .debugBanner:
+            "Shows a debug banner in non-production builds"
+        }
+    }
+
+    var defaultValue: Bool {
+        switch self {
+        case .newOnboarding, .redesignedCheckout, .debugBanner:
+            false
+        }
+    }
 }
 
+private let appFeatureFlags: FeatureFlags = {
+    let configurator = FeatureFlagsConfigurator<SwiftUIAppFeature>(
+        environment: .nonProduction,
+        isSimulator: true,
+        businessConfiguration: FlagConfiguration<SwiftUIAppFeature> {
+            enable(.newOnboarding)
+            disable(.redesignedCheckout)
+        },
+        testingConfiguration: FlagConfiguration<SwiftUIAppFeature> {
+            enable(.debugBanner)
+        },
+        simulatorConfiguration: .empty,
+        forcedConfiguration: .empty
+    )
+
+    return configurator.makeFeatureFlags()
+}()
+
 @available(iOS 14.0, *)
-public extension View {
-    /// Injects a `FeatureFlags` resolver into the view hierarchy.
-    ///
-    /// Descendant views can read the resolver with:
-    ///
-    /// ```swift
-    /// @Environment(\.featureFlags) private var featureFlags
-    /// ```
-    ///
-    /// - Parameter featureFlags: The resolver to expose to the view hierarchy.
-    /// - Returns: A view configured with the provided resolver in its environment.
-    func featureFlags(_ featureFlags: FeatureFlags) -> some View {
-        environment(\.featureFlags, featureFlags)
+struct RootView: View {
+    var body: some View {
+        NavigationView {
+            OnboardingView()
+        }
+        .featureFlags(appFeatureFlags)
     }
 }
 
 @available(iOS 14.0, *)
-public extension Scene {
-    /// Injects a `FeatureFlags` resolver into the scene environment.
-    ///
-    /// This is useful when the same resolver should be shared by the entire app scene.
-    ///
-    /// - Parameter featureFlags: The resolver to expose to the scene hierarchy.
-    /// - Returns: A scene configured with the provided resolver in its environment.
-    func featureFlags(_ featureFlags: FeatureFlags) -> some Scene {
-        environment(\.featureFlags, featureFlags)
+struct OnboardingView: View {
+    @Environment(\.featureFlags) private var flags
+
+    var body: some View {
+        VStack(spacing: 20) {
+            if flags.isEnabled(SwiftUIAppFeature.debugBanner) {
+                Text("Debug banner is enabled")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.yellow.opacity(0.2))
+                    .clipShape(.capsule)
+            }
+
+            if flags.isEnabled(SwiftUIAppFeature.newOnboarding) {
+                NewOnboardingView()
+            } else {
+                LegacyOnboardingView()
+            }
+        }
+        .padding()
+        .navigationTitle("Feature Flags")
     }
 }
-#endif
+
+private struct NewOnboardingView: View {
+    var body: some View {
+        Text("New onboarding")
+    }
+}
+
+private struct LegacyOnboardingView: View {
+    var body: some View {
+        Text("Legacy onboarding")
+    }
+}
+
+#Preview {
+    if #available(iOS 14.0, *) {
+        RootView()
+    }
+}
